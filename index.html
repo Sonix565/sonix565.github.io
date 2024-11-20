@@ -1,0 +1,1417 @@
+<html><head><base href="http://example.com">
+<title>BoofToob - Connect & Chat</title>
+<style>
+:root {
+    --primary: #4a90e2;
+    --secondary: #f39c12;
+    --bg: #f4f4f4;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: var(--bg);
+}
+
+/* Add transition styles for content sections */
+#homeContent, #authForms, #chatContainer, #profileContainer {
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+    opacity: 0;
+    transform: translateY(20px);
+    display: none;
+}
+
+#homeContent.active, #authForms.active, #chatContainer.active, #profileContainer.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.navbar {
+    background: white;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.nav-links a {
+    margin-left: 1rem;
+    text-decoration: none;
+    color: #333;
+    transition: color 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--primary);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.auth-forms {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.form-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    animation: fadeIn 0.5s ease-out;
+}
+
+.form-container h2 {
+    margin-bottom: 1rem;
+    color: var(--primary);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-weight: 600;
+}
+
+button:hover {
+    background: #357abd;
+    transform: translateY(-1px);
+}
+
+button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.switch-form {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.switch-form a {
+    color: var(--primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.switch-form a:hover {
+    color: #357abd;
+}
+
+.chat-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: none;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.online-users {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.chat-input {
+    display: flex;
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    background: #fff;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    margin-right: 1rem;
+    transition: border-color 0.3s;
+}
+
+.chat-input input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.message {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    max-width: 80%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    animation: messageSlide 0.3s ease-out;
+}
+
+.message .profile-picture {
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 1;
+}
+
+.message .username {
+    margin-left: 45px; /* Space for profile picture */
+    z-index: 2;
+}
+
+.message.sent {
+    background: var(--primary);
+    color: white;
+    margin-left: auto;
+}
+
+.message.received {
+    background: #f0f0f0;
+    margin-right: auto;
+}
+
+.message.admin {
+    background: var(--primary);
+    color: white;
+}
+
+.message.deleted {
+    opacity: 0.5;
+    text-decoration: line-through;
+}
+
+.message .username {
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+    cursor: pointer;
+    color: #ffffff !important;
+}
+
+.message .username:hover {
+    text-decoration: underline;
+}
+
+.message .timestamp {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+}
+
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.error-message {
+    background: #ff6b6b;
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: none;
+    animation: shake 0.5s ease-out;
+}
+
+.success-message {
+    background: #4CAF50;
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    display: none;
+    animation: shake 0.5s ease-out;
+}
+
+.home-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.home-content h1 {
+    color: var(--primary);
+    margin-bottom: 1rem;
+}
+
+.home-content p {
+    color: #666;
+    max-width: 600px;
+    margin: 0 auto 2rem auto;
+    line-height: 1.6;
+}
+
+.profile-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.profile-picture {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin: 1rem auto;
+    display: block;
+    border: 3px solid var(--primary);
+    background: #eee;
+    cursor: pointer;
+}
+
+.profile-tabs {
+    display: flex;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+}
+
+.profile-tab {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+}
+
+.profile-tab.active {
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+}
+
+.profile-container h2 {
+    color: var(--primary);
+    margin-bottom: 1.5rem;
+}
+
+.profile-info {
+    margin-bottom: 1.5rem;
+}
+
+.profile-info div {
+    margin-bottom: 0.5rem;
+    padding: 0.5rem;
+    background: var(--bg);
+    border-radius: 4px;
+}
+
+.inbox-messages {
+    margin-top: 1rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.inbox-message {
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.inbox-message:last-child {
+    border-bottom: none;
+}
+
+.inbox-message .from {
+    font-weight: bold;
+    color: var(--primary);
+}
+
+.inbox-message .timestamp {
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.close-modal {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #666;
+}
+
+.close-modal:hover {
+    color: #333;
+}
+
+.dm-modal {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1001;
+    max-width: 500px;
+    width: 90%;
+}
+
+.dm-modal.active {
+    display: block;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-overlay.active {
+    display: block;
+}
+
+.admin-controls {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #ddd;
+    display: none;
+}
+
+.admin-controls button {
+    margin-right: 0.5rem;
+    background: #ff6b6b;
+}
+
+.admin-controls button:hover {
+    background: #ee5253;
+}
+
+.staff-badge {
+    color: #ff6b6b;
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+}
+
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.message-action {
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.1);
+    transition: background 0.3s;
+}
+
+.message-action:hover {
+    background: rgba(0,0,0,0.2);
+}
+
+.message-action.liked {
+    background: #4CAF50 !important; /* Green color for liked messages */
+    color: white;
+}
+
+.report-modal {
+    display: none;
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1002;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+
+.report-modal.active {
+    display: block;
+}
+
+.report-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+}
+
+.report-option {
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.report-option:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.report-custom {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    display: none;
+}
+
+.error-page {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 2rem;
+    text-align: center;
+}
+
+.error-page h1 {
+    color: var(--primary);
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.error-page p {
+    color: #666;
+    margin-bottom: 2rem;
+}
+
+.error-page button {
+    padding: 1rem 2rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes messageSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+</style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="javascript:void(0)" onclick="showHome()" class="logo">BoofToob</a>
+        <div class="nav-links">
+            <a href="javascript:void(0)" onclick="showHome()">Home</a>
+            <a href="javascript:void(0)" onclick="showChat()">Chat</a>
+            <a href="javascript:void(0)" onclick="showProfile()" id="profileBtn" style="display: none;">Profile</a>
+            <a href="javascript:void(0)" id="loginBtn" onclick="showAuth()">Login</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div id="homeContent" class="home-content">
+            <h1>This is a chatting website...</h1>
+            <p>Why are you at home?</p>
+            <button onclick="showChat()" style="margin-right: 1rem;">Go to Chat</button>
+            <button onclick="currentUser ? showProfile() : showAuth()" id="homeProfileBtn">
+                Login
+            </button>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="auth-forms" id="authForms" style="display: none;">
+            <div class="form-container" id="loginForm">
+                <h2>Login</h2>
+                <form onsubmit="return handleLogin(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" id="loginSubmitBtn">Login</button>
+                    <div class="switch-form">
+                        <a onclick="toggleForms()">Need an account? Sign up</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-container" id="signupForm" style="display: none;">
+                <h2>Create Account</h2>
+                <form onsubmit="return handleSignup(event)">
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="signupUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" required>
+                    </div>
+                    <button type="submit" id="signupSubmitBtn">Sign Up</button>
+                    <div class="switch-form">
+                        <a onclick="toggleForms()">Already have an account? Login</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="chat-container" id="chatContainer" style="display: none;">
+            <div class="chat-header">
+                <h2>Live Chat</h2>
+                <div class="online-users" id="onlineUsers">Online: 1</div>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <!-- Messages will be inserted here -->
+            </div>
+            <div class="admin-controls" id="adminControls">
+                <button onclick="clearChat()">Clear Chat</button>
+                <button onclick="kickUser()">Kick User</button>
+                <button onclick="banUser()">Ban User</button>
+                <button onclick="viewAccountLogs()">View Account Logs</button>
+            </div>
+            <div class="chat-input">
+                <input type="text" placeholder="Type your message..." id="messageInput">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <div id="profileContainer" class="profile-container" style="display: none;">
+            <h2>Profile Settings</h2>
+            <div class="profile-picture-container">
+                <img id="profilePicture" class="profile-picture" src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23eee'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='40'>👤</text></svg>" onclick="document.getElementById('profilePicInput').click()">
+                <input type="file" id="profilePicInput" style="display: none;" accept="image/*" onchange="handleProfilePicUpload(event)">
+            </div>
+            <div class="profile-tabs">
+                <div class="profile-tab active" onclick="switchProfileTab('info')">Profile Info</div>
+                <div class="profile-tab" onclick="switchProfileTab('inbox')">Inbox</div>
+            </div>
+            <div id="profileInfo" class="profile-info">
+                <div><strong>Username:</strong> <span id="profileUsername"></span></div>
+                <div><strong>Account Created:</strong> <span id="profileCreated"></span></div>
+            </div>
+            <div id="profileInbox" class="inbox-messages" style="display: none">
+                <!-- Inbox messages will be displayed here -->
+            </div>
+            <button onclick="handleLogout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="loading-screen" id="loadingScreen" style="display: none;">
+        <div class="spinner"></div>
+    </div>
+
+    <div class="modal-overlay" id="dmModal">
+        <div class="dm-modal">
+            <span class="close-modal" onclick="closeDmModal()">&times;</span>
+            <h3>Send Message to <span id="dmRecipient"></span></h3>
+            <div class="form-group">
+                <textarea id="dmMessage" rows="4" class="form-control" placeholder="Type your message..."></textarea>
+            </div>
+            <button onclick="sendDirectMessage()">Send Message</button>
+        </div>
+    </div>
+
+    <div class="error-page" id="errorPage" style="display: none;">
+        <h1>404</h1>
+        <p>Oops! Something went wrong...</p>
+        <button onclick="hideErrorPage()">Go Back</button>
+    </div>
+
+<script>
+let currentUser = null;
+let messages = [];
+let onlineUsers = new Set();
+let bannedUsers = new Set();
+
+// Default accounts with creation dates
+const accounts = {
+    'test': {
+        password: '123',
+        created: '2024-01-01',
+        inbox: [],
+        isLoggedIn: false,
+        isGlitchy: true,
+        profilePic: null,
+        reports: []
+    },
+    'Admin': {
+        password: 'youcannotguess',
+        created: '2024-01-01',
+        inbox: [],
+        isLoggedIn: false,
+        isStaff: true,
+        profilePic: null,
+        reports: []
+    }
+};
+
+function handleProfilePicUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Check if file is an image
+    if (!file.type.startsWith('image/')) {
+        showError('Please upload an image file');
+        return;
+    }
+    
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+        showError('Image size must be less than 5MB');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // Update profile picture in accounts object
+        if (currentUser && accounts[currentUser]) {
+            accounts[currentUser].profilePic = e.target.result;
+            // Update displayed profile picture
+            document.getElementById('profilePicture').src = e.target.result;
+            showError('Profile picture updated successfully!', true); // Added isSuccess parameter
+        }
+    };
+    reader.onerror = function() {
+        showError('Error reading file');
+    };
+    reader.readAsDataURL(file);
+}
+
+function showLoading() {
+    document.getElementById('loadingScreen').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingScreen').style.display = 'none';
+}
+
+function showError(message, isSuccess = false) {
+    const errorElement = document.getElementById('errorMessage');
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+    
+    // Apply success styling if isSuccess is true
+    if (isSuccess) {
+        errorElement.style.background = '#4CAF50';
+    } else {
+        errorElement.style.background = '#ff6b6b';
+    }
+    
+    setTimeout(() => {
+        errorElement.style.display = 'none';
+        // Reset background color
+        errorElement.style.background = '#ff6b6b';
+    }, 3000);
+}
+
+function showErrorPage() {
+    document.getElementById('errorPage').style.display = 'flex';
+}
+
+function hideErrorPage() {
+    document.getElementById('errorPage').style.display = 'none';
+    showHome();
+}
+
+function hideAllSections() {
+    const sections = ['homeContent', 'authForms', 'chatContainer', 'profileContainer'];
+    sections.forEach(id => {
+        const element = document.getElementById(id);
+        element.style.display = 'none';
+        element.classList.remove('active');
+    });
+}
+
+function showSection(id, displayStyle = 'block') {
+    hideAllSections();
+    const element = document.getElementById(id);
+    element.style.display = displayStyle;
+    // Trigger reflow
+    element.offsetHeight;
+    element.classList.add('active');
+}
+
+function showHome() {
+    showSection('homeContent');
+    updateHomeProfileBtn();
+}
+
+function showAuth() {
+    showSection('authForms');
+}
+
+function showChat() {
+    if (!currentUser) {
+        currentUser = 'Guest-' + Math.floor(Math.random() * 1000);
+        onlineUsers.add(currentUser);
+        updateOnlineUsers();
+    }
+    showSection('chatContainer', 'flex');
+    updateAdminControls();
+}
+
+function showProfile() {
+    if (!currentUser) {
+        showError('Please login first!');
+        showAuth();
+        return;
+    }
+    showSection('profileContainer');
+    document.getElementById('profileUsername').textContent = currentUser;
+    document.getElementById('profileCreated').textContent = accounts[currentUser]?.created || 'N/A';
+    document.getElementById('profilePicture').src = accounts[currentUser]?.profilePic || "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23eee'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-size='40'>👤</text></svg>";
+}
+
+function switchProfileTab(tab) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.profile-tab').forEach(t => t.classList.remove('active'));
+    
+    // Add active class to selected tab using standard DOM methods
+    document.querySelectorAll('.profile-tab').forEach(t => {
+        if (t.textContent === (tab === 'info' ? 'Profile Info' : 'Inbox')) {
+            t.classList.add('active');
+        }
+    });
+    
+    document.getElementById('profileInfo').style.display = tab === 'info' ? 'block' : 'none';
+    document.getElementById('profileInbox').style.display = tab === 'inbox' ? 'block' : 'none';
+    
+    if (tab === 'inbox') {
+        displayInbox();
+    }
+}
+
+function displayInbox() {
+    const inboxElement = document.getElementById('profileInbox');
+    const messages = accounts[currentUser].inbox;
+    
+    if (messages.length === 0) {
+        inboxElement.innerHTML = '<div class="inbox-message">No messages yet</div>';
+        return;
+    }
+    
+    inboxElement.innerHTML = messages.map(msg => `
+        <div class="inbox-message">
+            <div class="from">From: ${msg.from}</div>
+            <div class="message-text">${msg.text}</div>
+            <div class="timestamp">${msg.timestamp.toLocaleString()}</div>
+            ${msg.isReport ? `
+                <div class="report-actions">
+                    <button onclick="banReportedUser(${msg.messageIndex}, '${msg.reporter}')">Ban User</button>
+                    <button onclick="dismissReport(${msg.messageIndex})">Dismiss</button>
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+function toggleForms() {
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    
+    if (loginForm.style.display === 'none') {
+        loginForm.style.display = 'block';
+        signupForm.style.display = 'none';
+    } else {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+    }
+}
+
+function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    const loginBtn = document.getElementById('loginSubmitBtn');
+    
+    loginBtn.disabled = true;
+    showLoading();
+
+    setTimeout(() => {
+        if (username === 'test' && Math.random() < 0.3) {
+            showError('Unknown error occurred during login!');
+            if (Math.random() < 0.5) {
+                showErrorPage();
+            }
+            loginBtn.disabled = false;
+            hideLoading();
+            return;
+        }
+
+        if (accounts[username] && accounts[username].password === password) {
+            if (accounts[username].isLoggedIn) {
+                showError('You are already logged into this account! Please log out of the other device to log in to this one!');
+                loginBtn.disabled = false;
+                hideLoading();
+                return;
+            }
+            
+            if (currentUser && currentUser.startsWith('Guest-')) {
+                onlineUsers.delete(currentUser);
+            }
+            
+            currentUser = username;
+            accounts[username].isLoggedIn = true;
+            onlineUsers.add(username);
+            updateOnlineUsers();
+            document.getElementById('loginBtn').style.display = 'none';
+            document.getElementById('profileBtn').style.display = 'inline';
+            updateHomeProfileBtn();
+            
+            // Add random glitchy redirects for test account
+            if (username === 'test' && Math.random() < 0.3) {
+                showError('Connection interrupted!');
+                showHome();
+            } else {
+                showChat();
+            }
+        } else {
+            showError('Invalid username or password!');
+        }
+        loginBtn.disabled = false;
+        hideLoading();
+    }, 1000);
+
+    return false;
+}
+
+function handleSignup(e) {
+    e.preventDefault();
+    const username = document.getElementById('signupUsername').value;
+    const password = document.getElementById('signupPassword').value;
+    const signupBtn = document.getElementById('signupSubmitBtn');
+
+    signupBtn.disabled = true;
+    showLoading();
+
+    setTimeout(() => {
+        if (accounts[username]) {
+            showError('Username already exists!');
+        } else {
+            accounts[username] = {
+                password: password,
+                created: new Date().toISOString().split('T')[0],
+                inbox: [],
+                isLoggedIn: false,
+                profilePic: null,
+                reports: []
+            };
+            showError('Account created successfully! Please login.', true);
+            toggleForms();
+        }
+        signupBtn.disabled = false;
+        hideLoading();
+    }, 1000);
+
+    return false;
+}
+
+function handleLogout() {
+    if (currentUser && !currentUser.startsWith('Guest-')) {
+        accounts[currentUser].isLoggedIn = false;
+    }
+    if (currentUser && currentUser.startsWith('Guest-')) {
+        onlineUsers.delete(currentUser);
+    }
+    currentUser = null;
+    updateOnlineUsers();
+    document.getElementById('loginBtn').style.display = 'inline';
+    document.getElementById('profileBtn').style.display = 'none';
+    showHome();
+}
+
+function updateOnlineUsers() {
+    document.getElementById('onlineUsers').textContent = `Online: ${onlineUsers.size}`;
+}
+
+function updateHomeProfileBtn() {
+    const homeProfileBtn = document.getElementById('homeProfileBtn');
+    if (homeProfileBtn) {
+        homeProfileBtn.textContent = currentUser && !currentUser.startsWith('Guest-') ? 'View Profile' : 'Login';
+    }
+}
+
+function updateAdminControls() {
+    const adminControls = document.getElementById('adminControls');
+    if (currentUser === 'Admin') {
+        adminControls.style.display = 'block';
+    } else {
+        adminControls.style.display = 'none';
+    }
+}
+
+function clearChat() {
+    if (currentUser === 'Admin') {
+        messages = [];
+        displayMessages();
+        broadcastSystemMessage('Chat cleared by Admin');
+    }
+}
+
+function kickUser() {
+    if (currentUser === 'Admin') {
+        const user = prompt('Enter username to kick:');
+        if (user && onlineUsers.has(user) && user !== 'Admin') {
+            onlineUsers.delete(user);
+            updateOnlineUsers();
+            broadcastSystemMessage(`${user} has been kicked by Admin`);
+        }
+    }
+}
+
+function banUser() {
+    if (currentUser === 'Admin') {
+        const user = prompt('Enter username to ban:');
+        if (user && user !== 'Admin') {
+            bannedUsers.add(user);
+            onlineUsers.delete(user);
+            updateOnlineUsers();
+            broadcastSystemMessage(`${user} has been banned by Admin`);
+        }
+    }
+}
+
+function broadcastSystemMessage(text) {
+    const messageObj = {
+        text: text,
+        user: 'System',
+        timestamp: new Date(),
+        type: 'admin',
+        likes: new Set(),
+        dislikes: new Set(),
+        reports: []
+    };
+    messages.push(messageObj);
+    displayMessages();
+}
+
+// Fix the displayMessages function to handle missing properties
+function displayMessages() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML = messages.map((msg, index) => {
+        // Initialize likes/dislikes if they don't exist
+        if (!msg.likes) msg.likes = new Set();
+        if (!msg.dislikes) msg.dislikes = new Set();
+        if (!msg.reports) msg.reports = [];
+
+        // Add random glitches for test account
+        if (msg.user === 'test' || (currentUser === 'test' && Math.random() < 0.3)) {
+            if (Math.random() < 0.2) {
+                showError('Unexpected error occurred!');
+            }
+            if (Math.random() < 0.2) {
+                return `<div class="message error">Message corrupted</div>`;
+            }
+        }
+        
+        const staffBadge = accounts[msg.user]?.isStaff ? 
+            '<div class="staff-badge">Staff</div>' : '';
+        
+        const profilePic = accounts[msg.user]?.profilePic ? 
+            `<img src="${accounts[msg.user].profilePic}" class="profile-picture" style="width: 30px; height: 30px;">` : '';
+        
+        const messageActions = `
+            <div class="message-actions">
+                <span class="message-action ${msg.likes.has(currentUser) ? 'liked' : ''}" 
+                      onclick="likeMessage(${index})">
+                    👍 ${msg.likes.size}
+                </span>
+                <span class="message-action ${msg.dislikes.has(currentUser) ? 'disliked' : ''}" 
+                      onclick="dislikeMessage(${index})">
+                    👎 ${msg.dislikes.size}
+                </span>
+                <span class="message-action" onclick="reportMessage(${index})">
+                    ⚠️ Report
+                </span>
+            </div>
+        `;
+
+        return `
+            <div class="message ${msg.type}">
+                ${staffBadge}
+                ${profilePic}
+                <div class="username" onclick="showDmModal('${msg.user}')">${msg.user}</div>
+                ${msg.text}
+                <div class="timestamp">${msg.timestamp.toLocaleTimeString()}</div>
+                ${messageActions}
+            </div>
+        `;
+    }).join('');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Modify the sendMessage function to check for banned users
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if (bannedUsers.has(currentUser)) {
+        showError('You are banned from sending messages');
+        return;
+    }
+    
+    if (currentUser === 'test') {
+        if (Math.random() < 0.3) {
+            showError('Message failed to send due to connection error!');
+            if (Math.random() < 0.5) {
+                showErrorPage();
+            }
+            return;
+        }
+    }
+    
+    if (message) {
+        const messageObj = {
+            text: currentUser === 'test' && Math.random() < 0.2 ? 
+                message.split('').reverse().join('') : message,
+            user: currentUser || 'Guest',
+            timestamp: new Date(),
+            type: currentUser === 'Admin' ? 'admin' : 'sent',
+            likes: new Set(),
+            dislikes: new Set(),
+            reports: []
+        };
+        
+        messages.push(messageObj);
+        displayMessages();
+        input.value = '';
+    }
+}
+
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// Direct Messaging Functions
+function showDmModal(username) {
+    if (!currentUser || currentUser.startsWith('Guest-')) {
+        showError('Please login to send direct messages');
+        return;
+    }
+    
+    if (username === currentUser) {
+        showError('You cannot send messages to yourself');
+        return;
+    }
+    
+    document.getElementById('dmRecipient').textContent = username;
+    document.getElementById('dmModal').classList.add('active');
+    document.querySelector('.dm-modal').classList.add('active');
+}
+
+function closeDmModal() {
+    document.getElementById('dmModal').classList.remove('active');
+    document.querySelector('.dm-modal').classList.remove('active');
+    document.getElementById('dmMessage').value = '';
+}
+
+function sendDirectMessage() {
+    const recipient = document.getElementById('dmRecipient').textContent;
+    const message = document.getElementById('dmMessage').value.trim();
+    
+    if (!message) {
+        showError('Please enter a message');
+        return;
+    }
+    
+    if (accounts[recipient]) {
+        accounts[recipient].inbox.push({
+            from: currentUser,
+            text: message,
+            timestamp: new Date()
+        });
+        showError('Message sent successfully!', true);
+        closeDmModal();
+    } else {
+        showError('User not found');
+    }
+}
+
+// Like/Dislike Functions
+function likeMessage(messageIndex) {
+    if (!currentUser || currentUser.startsWith('Guest-')) {
+        showError('Please login to like messages');
+        return;
+    }
+    
+    const message = messages[messageIndex];
+    if (message.likes.has(currentUser)) {
+        message.likes.delete(currentUser);
+    } else {
+        message.likes.add(currentUser);
+        message.dislikes.delete(currentUser);
+    }
+    displayMessages();
+}
+
+function dislikeMessage(messageIndex) {
+    if (!currentUser || currentUser.startsWith('Guest-')) {
+        showError('Please login to dislike messages');
+        return;
+    }
+    
+    const message = messages[messageIndex];
+    if (message.dislikes.has(currentUser)) {
+        message.dislikes.delete(currentUser);
+    } else {
+        message.dislikes.add(currentUser);
+        message.likes.delete(currentUser);
+    }
+    displayMessages();
+}
+
+function reportMessage(messageIndex) {
+    if (!currentUser || currentUser.startsWith('Guest-')) {
+        showError('Please login to report messages');
+        return;
+    }
+    
+    const message = messages[messageIndex];
+    const reportModal = document.createElement('div');
+    reportModal.className = 'report-modal active';
+    reportModal.innerHTML = `
+        <h3>Report Message</h3>
+        <p>Why are you reporting this message?</p>
+        <div class="report-options">
+            <div class="report-option" onclick="submitReport(${messageIndex}, 'Spam')">Spam</div>
+            <div class="report-option" onclick="submitReport(${messageIndex}, 'Harassment')">Harassment</div>
+            <div class="report-option" onclick="submitReport(${messageIndex}, 'Inappropriate content')">Inappropriate content</div>
+            <div class="report-option" onclick="showCustomReport()">Other reason</div>
+        </div>
+        <textarea class="report-custom" placeholder="Enter your reason..." style="display: none;"></textarea>
+        <button onclick="closeReportModal()">Cancel</button>
+    `;
+    
+    document.body.appendChild(reportModal);
+    document.getElementById('dmModal').classList.add('active');
+}
+
+function showCustomReport() {
+    const textarea = document.querySelector('.report-custom');
+    textarea.style.display = 'block';
+    textarea.focus();
+    
+    // Add submit button for custom report
+    const submitBtn = document.createElement('button');
+    submitBtn.textContent = 'Submit Report';
+    submitBtn.onclick = () => {
+        const customReason = textarea.value.trim();
+        if (customReason) {
+            const messageIndex = parseInt(document.querySelector('.report-modal').dataset.messageIndex);
+            submitReport(messageIndex, customReason);
+        }
+    };
+    textarea.parentElement.appendChild(submitBtn);
+}
+
+function closeReportModal() {
+    const reportModal = document.querySelector('.report-modal');
+    if (reportModal) {
+        reportModal.remove();
+    }
+    document.getElementById('dmModal').classList.remove('active');
+}
+
+function submitReport(messageIndex, reason) {
+    const message = messages[messageIndex];
+    message.reports.push({
+        reporter: currentUser,
+        reason: reason,
+        timestamp: new Date()
+    });
+    
+    // Send notification to admin's inbox
+    if (accounts['Admin']) {
+        accounts['Admin'].inbox.push({
+            from: 'System',
+            text: `New report from ${currentUser} for message by ${message.user}:\nReason: ${reason}\nMessage: "${message.text}"`,
+            timestamp: new Date(),
+            isReport: true,
+            messageIndex: messageIndex,
+            reporter: currentUser
+        });
+    }
+    
+    closeReportModal();
+    showError('Message reported successfully');
+}
+
+// Admin Controls
+function viewAccountLogs() {
+    if (currentUser !== 'Admin') return;
+    
+    // Check if admin accounts section already exists and remove it if it does
+    const existingSection = document.querySelector('.admin-accounts');
+    if (existingSection) {
+        existingSection.remove();
+        return;
+    }
+    
+    const logs = Object.entries(accounts).map(([username, data]) => `
+        <div class="account-item">
+            <div>
+                <strong>${username}</strong><br>
+                Created: ${data.created}<br>
+                Reports: ${data.reports.length}
+            </div>
+            <button onclick="viewReports('${username}')">View Reports</button>
+        </div>
+    `).join('');
+    
+    const adminSection = document.createElement('div');
+    adminSection.className = 'admin-accounts';
+    adminSection.innerHTML = `
+        <h3>Account Logs</h3>
+        ${logs}
+    `;
+    
+    document.getElementById('adminControls').appendChild(adminSection);
+}
+
+function viewReports(username) {
+    if (currentUser !== 'Admin') return;
+    
+    const reports = accounts[username].reports;
+    if (reports.length === 0) {
+        alert('No reports for this user');
+        return;
+    }
+    
+    const reportText = reports.map(report => 
+        `Reporter: ${report.reporter}\nReason: ${report.reason}\nTime: ${report.timestamp}`
+    ).join('\n\n');
+    
+    alert(`Reports for ${username}:\n\n${reportText}`);
+}
+
+function banReportedUser(messageIndex, reporter) {
+    if (currentUser !== 'Admin') return;
+    
+    const message = messages[messageIndex];
+    if (message) {
+        const userToBan = message.user;
+        bannedUsers.add(userToBan);
+        showError(`User ${userToBan} has been banned`);
+        broadcastSystemMessage(`${userToBan} has been banned by Admin`);
+    }
+}
+
+function dismissReport(messageIndex) {
+    if (currentUser !== 'Admin') return;
+    
+    // Remove the report from admin's inbox
+    accounts['Admin'].inbox = accounts['Admin'].inbox.filter(msg => 
+        !(msg.isReport && msg.messageIndex === messageIndex)
+    );
+    
+    displayInbox();
+    showError('Report dismissed');
+}
+
+// Initialize with home view
+showHome();
+</script>
+</body></html>
